@@ -8,9 +8,9 @@
  */
 class Grade
 {
-    private $courseName;
-    private $grade;
-    private $ects;
+    public $courseName;
+    public $grade;
+    public $ects;
 
     function __construct($courseName, $grade, $ects)
     {
