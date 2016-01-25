@@ -59,11 +59,13 @@ class StadsService
         curl_exec($this->ch);
 
         // simple redirect, SAMLRequest has changed
-        curl_setopt($this->ch, CURLOPT_URL, curl_getinfo($this->ch)["redirect_url"]);
+        $curlInfo = curl_getinfo($this->ch);
+        curl_setopt($this->ch, CURLOPT_URL, $curlInfo["redirect_url"]);
         curl_exec($this->ch);
 
         // redirect to the actual login page
-        curl_setopt($this->ch, CURLOPT_URL, curl_getinfo($this->ch)["redirect_url"]);
+        $curlInfo = curl_getinfo($this->ch);
+        curl_setopt($this->ch, CURLOPT_URL, $curlInfo["redirect_url"]);
         curl_exec($this->ch);
     }
 
@@ -122,7 +124,8 @@ class StadsService
                 "RelayState" => $RelayState))));
         curl_setopt($this->ch, CURLOPT_URL, "https://sbstads.au.dk:443/sb_STAP/saml/SAMLAssertionConsumer");
         curl_exec($this->ch);
-        preg_match('/selvbetjening=(.+?)[;\n]/i', curl_getinfo($this->ch)["request_header"], $matches);
+        $curlInfo = curl_getinfo($this->ch);
+        preg_match('/selvbetjening=(.+?)[;\n]/i', $curlInfo["request_header"], $matches);
         return $matches[1];
     }
 
