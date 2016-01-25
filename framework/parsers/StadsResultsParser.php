@@ -12,10 +12,11 @@ class StadsResultsParser
 {
     public static function ParseHTML($resultHtml) {
         $dom = new DOMDocument;
+        libxml_use_internal_errors(true);
         $dom->loadHTML($resultHtml);
+        libxml_clear_errors();
         $xpath = new DOMXPath($dom);
         $resultRows = $xpath->query("//table[@id='resultTable']/tbody/*");
-        print_r($resultRows);
         $grades = array();
         for($i = 0; $i < $resultRows->length; $i++) {
             $row = $resultRows->item($i);
