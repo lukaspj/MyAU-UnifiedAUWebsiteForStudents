@@ -32,7 +32,6 @@ class StadsStudiesParser
                 } elseif($rowTableRow->firstChild->textContent === "Studieretning") {
                     $linesOfStudy[] = $rowTableRow->childNodes->item(2)->textContent;
                 }
-                echo $rowTableRow->firstChild->textContent;
             }
             if(trim($studyName) !== "") {
                 $studies[] = array($studyName, $studyStatus, $linesOfStudy);
