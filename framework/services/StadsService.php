@@ -8,125 +8,97 @@
  */
 class StadsService
 {
-    static function GetActiveStadsSession($username, $password)
-    {
+    private $ch;
+
+    function __construct($username, $password) {
         // is cURL installed yet?
         if (!function_exists('curl_init')) {
             die('Sorry cURL is not installed!');
         }
 
-        $ch = curl_init();
+        $this->ch = curl_init();
 
         // setup SSL
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($this->ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, 0);
 
-        curl_setopt($ch, CURLOPT_COOKIESESSION, true);
-        curl_setopt($ch, CURLOPT_COOKIEJAR, '');  //could be empty, but cause problems on some hosts
-        curl_setopt($ch, CURLOPT_COOKIEFILE, '');  //could be empty, but cause problems on some hosts
-
-        // receive server response ...
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        self::RedirectToLoginPage($ch);
-        $SAMLResponse = self::SubmitUserData($ch, $username, $password);
-
-        list($RelayState, $SAMLResponse) = self::GetRelayState($ch, $SAMLResponse);
-
-        $selvbetjening = self::LoginToSTADS($ch, $SAMLResponse, $RelayState);
-        curl_close($ch);
-
-        // is cURL installed yet?
-        if (!function_exists('curl_init')) {
-            die('Sorry cURL is not installed!');
-        }
-
-        $ch2 = curl_init();
-        curl_setopt($ch2, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, 0);
-
-        curl_setopt($ch2, CURLOPT_COOKIESESSION, true);
-        curl_setopt($ch2, CURLOPT_COOKIEJAR, '');  //could be empty, but cause problems on some hosts
-        curl_setopt($ch2, CURLOPT_COOKIEFILE, '');  //could be empty, but cause problems on some hosts
+        curl_setopt($this->ch, CURLOPT_COOKIESESSION, true);
+        curl_setopt($this->ch, CURLOPT_COOKIEJAR, '');  //could be empty, but cause problems on some hosts
+        curl_setopt($this->ch, CURLOPT_COOKIEFILE, '');  //could be empty, but cause problems on some hosts
 
         // receive server response ...
-        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch2, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch2, CURLOPT_HEADER, 1);
-        curl_setopt($ch2, CURLINFO_HEADER_OUT, 1);
-        curl_setopt($ch2, CURLOPT_HTTPHEADER, array("Cookie: au_wayf_user=true; selvbetjening=$selvbetjening;"));
-        curl_setopt($ch2, CURLOPT_VERBOSE, 1);
-        curl_setopt($ch2, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/resultater/studresultater.jsp");
-        //curl_setopt($ch2, CURLOPT_COOKIE, "au_wayf_user=true; selvbetjening=$selvbetjening;");
-        echo curl_exec($ch2) . "!";
-        print_r(curl_getinfo($ch2));
-        curl_close($ch2);
-        //curl_setopt($ch, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/common/velkommen.jsp");
-        //echo curl_exec($ch);
-        // remember to close curl
-        // return the needed cookies instead
-        return $ch;
+        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+        $this->RedirectToLoginPage();
+        $SAMLResponse = $this->SubmitUserData($username, $password);
 
-        //curl_close($ch);
+        list($RelayState, $SAMLResponse) = $this->GetRelayState($SAMLResponse);
+
+        $this->LoginToSTADS($SAMLResponse, $RelayState);
+    }
+
+    function __destruct()
+    {
+        curl_close($this->ch);
     }
 
     /**
-     * @param $ch
+     * @param $this->ch
      * @param $matches
      * @return mixed
      */
-    private static function RedirectToLoginPage($ch)
+    private function RedirectToLoginPage()
     {
         // try to access STADS
-        curl_setopt($ch, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/index.jsp");
-        $loginRedirect = curl_exec($ch);
+        curl_setopt($this->ch, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/index.jsp");
+        $loginRedirect = curl_exec($this->ch);
 
         // fetch the login url and redirect to Single Sign On login screen
         preg_match('/content.+?url\W+?(.+?)\"/i', $loginRedirect, $matches);
         $loginUrl = $matches[1];
-        curl_setopt($ch, CURLOPT_URL, $loginUrl);
-        curl_exec($ch);
+        curl_setopt($this->ch, CURLOPT_URL, $loginUrl);
+        curl_exec($this->ch);
 
         // simple redirect, SAMLRequest has changed
-        curl_setopt($ch, CURLOPT_URL, curl_getinfo($ch)["redirect_url"]);
-        curl_exec($ch);
+        curl_setopt($this->ch, CURLOPT_URL, curl_getinfo($this->ch)["redirect_url"]);
+        curl_exec($this->ch);
 
         // redirect to the actual login page
-        curl_setopt($ch, CURLOPT_URL, curl_getinfo($ch)["redirect_url"]);
-        curl_exec($ch);
+        curl_setopt($this->ch, CURLOPT_URL, curl_getinfo($this->ch)["redirect_url"]);
+        curl_exec($this->ch);
     }
 
     /**
-     * @param $ch
+     * @param $this->ch
      * @param $username
      * @param $password
      * @return array
      * @internal param $matches
      */
-    private static function SubmitUserData($ch, $username, $password)
+    private function SubmitUserData($username, $password)
     {
         // enter our username and password and submit it
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS,
+        curl_setopt($this->ch, CURLOPT_POST, 1);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS,
             http_build_query(array("username" => $username,
                 "password" => $password)));
-        $loginResult = curl_exec($ch);
+        $loginResult = curl_exec($this->ch);
 
         preg_match('/name="SAMLResponse" value="(.+)"/i', $loginResult, $matches);
         return $matches[1];
     }
 
     /**
-     * @param $ch
+     * @param $this->ch
      * @param $SAMLResponse
      * @param $matches
      * @return array
      */
-    private static function GetRelayState($ch, $SAMLResponse)
+    private function GetRelayState($SAMLResponse)
     {
-        curl_setopt($ch, CURLOPT_URL, "https://wayf.wayf.dk/module.php/saml/sp/saml2-acs.php/wayf.wayf.dk");
-        curl_setopt($ch, CURLOPT_POSTFIELDS,
+        curl_setopt($this->ch, CURLOPT_URL, "https://wayf.wayf.dk/module.php/saml/sp/saml2-acs.php/wayf.wayf.dk");
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS,
             http_build_query(array("SAMLResponse" => $SAMLResponse)));
-        $samlResult = curl_exec($ch);
+        $samlResult = curl_exec($this->ch);
 
         preg_match('/name="RelayState" value="(.+)"/i', $samlResult, $matches);
         $RelayState = $matches[1];
@@ -136,21 +108,33 @@ class StadsService
     }
 
     /**
-     * @param $ch
+     * @param $this->ch
      * @param $SAMLResponse
      * @param $RelayState
      */
-    private static function LoginToSTADS($ch, $SAMLResponse, $RelayState)
+    private function LoginToSTADS($SAMLResponse, $RelayState)
     {
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLINFO_HEADER_OUT, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS,
+        curl_setopt($this->ch, CURLOPT_HEADER, 1);
+        curl_setopt($this->ch, CURLINFO_HEADER_OUT, 1);
+        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS,
             urldecode(http_build_query(array("SAMLResponse" => urlencode($SAMLResponse),
                 "RelayState" => $RelayState))));
-        curl_setopt($ch, CURLOPT_URL, "https://sbstads.au.dk:443/sb_STAP/saml/SAMLAssertionConsumer");
-        curl_exec($ch);
-        preg_match('/selvbetjening=(.+?)[;\n]/i', curl_getinfo($ch)["request_header"], $matches);
+        curl_setopt($this->ch, CURLOPT_URL, "https://sbstads.au.dk:443/sb_STAP/saml/SAMLAssertionConsumer");
+        curl_exec($this->ch);
+        preg_match('/selvbetjening=(.+?)[;\n]/i', curl_getinfo($this->ch)["request_header"], $matches);
         return $matches[1];
+    }
+
+    public function GetResultPage()
+    {
+        curl_setopt($this->ch, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/resultater/studresultater.jsp");
+        return curl_exec($this->ch);
+    }
+
+    public function GetStudiesPage()
+    {
+        curl_setopt($this->ch, CURLOPT_URL, "https://sbstads.au.dk/sb_STAP/sb/indskrivning/visIndskrivning.jsp");
+        return curl_exec($this->ch);
     }
 }
