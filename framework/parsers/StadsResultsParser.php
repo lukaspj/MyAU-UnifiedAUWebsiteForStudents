@@ -21,13 +21,17 @@ class StadsResultsParser
         $grades = array();
         for ($i = 0; $i < $resultRows->length; $i++) {
             $row = $resultRows->item($i);
-            $grades[] = new Grade(self::GetCourseName($row), self::GetCourseGrades($row), self::GetCourseECTS($row));
+            $grades[] = new Grade(self::GetCourseName($row),
+                self::GetCourseRatedAt($row),
+                self::GetCourseGrades($row),
+                self::GetCourseECTS($row));
         }
         $meritRows = $xpath->query("//table[@id='meritTable']/tbody/*");
         $merits = array();
         for ($i = 0; $i < $meritRows->length; $i++) {
             $row = $meritRows->item($i);
             $merits[] = new Grade(self::GetCourseNameForMerit($row),
+                self::GetCourseRatedAtForMerit($row),
                 self::GetCourseGradesForMerit($row),
                 self::GetCourseECTSForMerit($row));
         }
@@ -37,6 +41,11 @@ class StadsResultsParser
     private static function GetCourseName($row)
     {
         return trim($row->childNodes->item(0)->textContent);
+    }
+
+    private static function GetCourseRatedAt($row)
+    {
+        return trim($row->childNodes->item(2)->textContent);
     }
 
     private static function GetCourseGrades($row)
@@ -52,6 +61,11 @@ class StadsResultsParser
     private static function GetCourseNameForMerit($row)
     {
         return trim($row->childNodes->item(0)->textContent);
+    }
+
+    private static function GetCourseRatedAtForMerit($row)
+    {
+        return trim($row->childNodes->item(4)->textContent);
     }
 
     private static function GetCourseGradesForMerit($row)

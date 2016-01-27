@@ -9,12 +9,14 @@
 class Grade
 {
     public $courseName;
+    public $ratedAt;
     public $grade;
     public $ects;
 
-    function __construct($courseName, $grade, $ects)
+    function __construct($courseName, $ratedAt, $grade, $ects)
     {
         $this->courseName = $courseName;
+        $this->ratedAt = $ratedAt;
         $this->grade = $grade;
         $this->ects = $ects;
     }
@@ -46,5 +48,13 @@ class Grade
     public function getEcts()
     {
         return $this->ects;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRatedAt()
+    {
+        return $this->ratedAt;
     }
 }
