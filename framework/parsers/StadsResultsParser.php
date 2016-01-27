@@ -45,7 +45,7 @@ class StadsResultsParser
 
     private static function GetCourseRatedAt($row)
     {
-        return trim($row->childNodes->item(2)->textContent);
+        return DateTime::createFromFormat("d.m.Y", trim($row->childNodes->item(2)->textContent))->format('D M d Y H:i:s O');
     }
 
     private static function GetCourseGrades($row)
@@ -65,7 +65,7 @@ class StadsResultsParser
 
     private static function GetCourseRatedAtForMerit($row)
     {
-        return trim($row->childNodes->item(4)->textContent);
+        return DateTime::createFromFormat("d.m.Y", trim($row->childNodes->item(4)->textContent))->format('D M d Y H:i:s O');
     }
 
     private static function GetCourseGradesForMerit($row)
